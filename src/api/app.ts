@@ -5,8 +5,8 @@ import cookieParser from "cookie-parser";
 
 // Routes
 import authRoutesV1 from "./routes/v1/authRoutes.js";
-import profileRoutesV1 from "./routes/v1/profileRoutes.js";
-import providerRoutesV1 from "./routes/v1/provider.routes.ts"
+// import profileRoutesV1 from "./routes/v1/profileRoutes.js";
+import providerRoutesV1 from "./routes/v1/provider.routes.js";
 
 // Config
 import mongoStore from "../config/sessionStore.js";
@@ -60,8 +60,8 @@ app.use(limiter);
 
 // Routes
 app.use("/api/v1/auth", authRoutesV1);
-app.use("/api/v1/profile", profileRoutesV1);
-app.use("/api/v1/providers", providerRoutesV1)
+// app.use("/api/v1/profile", profileRoutesV1);
+app.use("/api/v1/providers", providerRoutesV1);
 
 app.use(globalErrorHandler);
 
