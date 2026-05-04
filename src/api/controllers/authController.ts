@@ -137,12 +137,14 @@ const login: RequestHandler = async (req, res, next) => {
     const token = generateToken(user);
 
     return res.json({
-      id: user._id,
-      email: user.email,
-      role: user.role,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        onboardingStatus: user.onboardingStatus,
+        fullName: profile?.fullName ?? null,
+      },
       accessToken: token,
-      onboardingStatus: user.onboardingStatus,
-      fullName: profile?.fullName ?? null,
     });
   } catch (err) {
     next(err);
