@@ -64,7 +64,7 @@ const sendActivationOtp = async (user: UserDocument) => {
     user.otpLastSentAt &&
     Date.now() - user.otpLastSentAt.getTime() < 60 * 1000
   ) {
-    throw new Error("Please wait before requesting another OTP");
+    throw new AppError("Please wait before requesting another OTP");
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
