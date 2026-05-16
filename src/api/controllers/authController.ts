@@ -64,6 +64,41 @@ const signup: RequestHandler = async (req, res, next) => {
   }
 };
 
+const resendOtp: RequestHandler = async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({
+      message: "Invalid request",
+    });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user || !user.otpCode || !user.otpExpiry) {
+      return res.status(400).json({
+        message: "Invalid request",
+      });
+    }
+
+    if (user.status === "ACTIVE") {
+      return res.status(400).json({
+        message: "Account already verified",
+      });
+    }
+
+    await sendActivationOtp(user);
+
+    return res.json({
+      message: "OTP sent successfully",
+    });
+  } catch (err) {
+    console.error("OTP resend error:", err);
+    next(err);
+  }
+};
+
 const verifyOtp: RequestHandler = async (req, res, next) => {
   const { email, otp } = req.body;
 
@@ -325,5 +360,6 @@ export {
   refreshToken,
   requestPasswordReset,
   resetPassword,
+  resendOtp,
   getCurrentUser,
 };

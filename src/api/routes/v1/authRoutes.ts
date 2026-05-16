@@ -9,6 +9,7 @@ import {
   getCurrentUser,
   loginOAuth,
   verifyOtp,
+  resendOtp,
 } from "../../controllers/authController.js";
 
 import { auth } from "../../middleware/auth.js";
@@ -29,7 +30,8 @@ router.post(
   signup,
 ); /// TODO: Add test for idemptotency
 
-router.get("/verify-account", verifyOtp);
+router.post("/verify-account", verifyOtp);
+router.post("/resend-otp", resendOtp);
 
 router.post(
   "/login",
