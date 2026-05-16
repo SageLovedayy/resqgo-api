@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import sgMail from "@sendgrid/mail";
 
 const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER || "sendgrid";
+const EMAIL_FROM = process.env.EMAIL_FROM || "Resqgo";
 
 export interface EmailPayload {
   to: string;
@@ -26,7 +27,7 @@ export class GmailSmtpProvider implements EmailProvider {
   async send({ to, subject, html }: EmailPayload): Promise<void> {
     await this.transporter.sendMail({
       //   from: EMAIL_USER!,
-      from: `"Digital Health Africa" <${EMAIL_USER}>`,
+      from: {email: EMAIL_FROM!, name: "Resqgo"},
       to,
       subject,
       html,
