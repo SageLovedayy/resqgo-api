@@ -27,7 +27,7 @@ export class GmailSmtpProvider implements EmailProvider {
   async send({ to, subject, html }: EmailPayload): Promise<void> {
     await this.transporter.sendMail({
       //   from: EMAIL_USER!,
-      from: {email: EMAIL_FROM!, name: "Resqgo"},
+       from: `"Resqgo" <${EMAIL_USER}>`,
       to,
       subject,
       html,
@@ -47,7 +47,7 @@ export class SendGridProvider implements EmailProvider {
     await sgMail.send({
       to,
       //   from: EMAIL_USER!,
-      from: `"Digital Health Africa" <${EMAIL_USER}>`,
+      from: {email: EMAIL_FROM!, name: "Resqgo"},
       subject,
       html,
     });
