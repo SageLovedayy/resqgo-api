@@ -191,8 +191,11 @@ const login: RequestHandler = async (req, res, next) => {
 
     if (user.status === "PENDING_ACTIVATION") {
       await sendActivationOtp(user);
-      return res.status(403).json({
-        message: "Activate your account. Email resent.", // This should link to otp screen afterwards
+
+      return res.status(200).json({
+        requiresOtpVerification: true,
+        email: user.email,
+        message: "Activate your account. Verification code sent.",
       });
     }
 
