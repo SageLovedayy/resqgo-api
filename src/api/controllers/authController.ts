@@ -7,7 +7,7 @@ import User from "../models/User.js";
 import { generateToken, verifyToken } from "../utils/jwtTokenHandler.js";
 
 import {
-  sendActivationEmail,
+  sendActivationOtp,
   sendPasswordResetEmail,
 } from "../services/emailService.js";
 import { hashToken, generateRawToken } from "../utils/secureToken.js";
@@ -50,7 +50,7 @@ const signup: RequestHandler = async (req, res, next) => {
       },
     });
 
-    await sendActivationEmail(user);
+    await sendActivationOtp(user);
 
     return res.status(201).json({
       userId: user._id,
@@ -64,40 +64,69 @@ const signup: RequestHandler = async (req, res, next) => {
   }
 };
 
-const activateAccount: RequestHandler = async (req, res, next) => {
-  const token = req.params.token as string | undefined;
-  console.log("Token received:", req.params.token);
-  console.log("Token length:", req.params.token?.length);
-  if (!token) {
-    return res.status(400).json({ message: "Activation token is required" });
+const verifyOtp: RequestHandler = async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  if (!otp) {
+    return res.status(400).json({
+      message: "OTP is required",
+    });
   }
 
   try {
-    const user = await User.findOne({
-      activationToken: token,
-      activationTokenExpiry: { $gt: new Date() },
-    });
+    const user = await User.findOne({ email });
 
-    if (!user) {
-      return res
-        .status(400)
-        .json({ message: "Invalid or expired activation link" });
-    }
-
-    if (user.status === "ACTIVE") {
-      return res.json({
-        message: "Account already activated. You can log in.",
+    if (!user || !user.otpCode || !user.otpExpiry) {
+      return res.status(400).json({
+        message: "Invalid request",
       });
     }
 
+    // blocked
+    if (user.otpBlockedUntil && user.otpBlockedUntil > new Date()) {
+      return res.status(429).json({
+        message: "Too many attempts. Try again later.",
+      });
+    }
+
+    // expired
+    if (user.otpExpiry < new Date()) {
+      return res.status(400).json({
+        message: "OTP expired",
+      });
+    }
+
+    const isValid = await bcrypt.compare(otp, user.otpCode);
+
+    // invalid OTP
+    if (!isValid) {
+      user.otpAttempts += 1;
+
+      if (user.otpAttempts >= 5) {
+        user.otpBlockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+
+        user.otpAttempts = 0;
+      }
+
+      await user.save();
+
+      return res.status(400).json({
+        message: "Invalid OTP",
+      });
+    }
+
+    // success
     user.status = "ACTIVE";
-    user.activationToken = null;
-    user.activationTokenExpiry = null;
+
+    user.otpCode = undefined;
+    user.otpExpiry = undefined;
+    user.otpAttempts = 0;
+    user.otpBlockedUntil = undefined;
 
     await user.save();
 
     return res.json({
-      message: "Account activated successfully. You can now log in.",
+      message: "Account verified",
     });
   } catch (err) {
     console.error("Activation error:", err);
@@ -126,9 +155,9 @@ const login: RequestHandler = async (req, res, next) => {
     }
 
     if (user.status === "PENDING_ACTIVATION") {
-      await sendActivationEmail(user);
+      await sendActivationOtp(user);
       return res.status(403).json({
-        message: "Activate your account. Email resent.",
+        message: "Activate your account. Email resent.", // This should link to otp screen afterwards
       });
     }
 
@@ -290,7 +319,7 @@ const getCurrentUser: RequestHandler = async (req, res) => {
 
 export {
   signup,
-  activateAccount,
+  verifyOtp,
   login,
   loginOAuth,
   refreshToken,

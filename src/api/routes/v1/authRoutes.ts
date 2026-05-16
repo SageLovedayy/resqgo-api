@@ -6,9 +6,9 @@ import {
   login,
   requestPasswordReset,
   resetPassword,
-  activateAccount,
   getCurrentUser,
   loginOAuth,
+  verifyOtp,
 } from "../../controllers/authController.js";
 
 import { auth } from "../../middleware/auth.js";
@@ -29,7 +29,7 @@ router.post(
   signup,
 ); /// TODO: Add test for idemptotency
 
-router.get("/activate-account/:token", activateAccount);
+router.get("/verify-account", verifyOtp);
 
 router.post(
   "/login",

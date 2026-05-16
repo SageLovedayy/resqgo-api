@@ -10,8 +10,11 @@ export interface IUser {
   flagged: boolean;
   onboardingStatus: "PENDING" | "COMPLETED";
 
-  activationToken?: string | null;
-  activationTokenExpiry?: Date | null;
+  otpCode?: string | null;
+  otpExpiry?: Date | null;
+  otpAttempts: number;
+  otpBlockedUntil?: Date;
+  otpLastSentAt?: Date | null;
 
   resetToken?: string | null;
   resetTokenExpiry?: Date | null;
@@ -54,8 +57,15 @@ const userSchema = new Schema<IUser>(
       default: "PENDING",
     },
 
-    activationToken: { type: String, default: null },
-    activationTokenExpiry: { type: Date, default: null },
+    otpCode: { type: String, default: null },
+    otpExpiry: { type: Date, default: null },
+    otpAttempts: {
+      type: Number,
+      default: 0,
+    },
+    otpLastSentAt: { type: Date, default: null },
+
+    otpBlockedUntil: { type: Date, default: null },
 
     resetToken: { type: String, default: null },
     resetTokenExpiry: { type: Date, default: null },

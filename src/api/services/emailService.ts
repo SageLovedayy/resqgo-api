@@ -10,6 +10,7 @@ import Profile from "../models/Profile.js";
 import { EMAIL_USER, EMAIL_PASS, CLIENT_HOST } from "../../config/keys.js";
 import { AppError } from "../errors/AppError.js";
 import sendEmail from "../utils/sendEmail.js";
+import bcrypt from "bcryptjs";
 
 const transporter: Transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -57,30 +58,41 @@ const sendPasswordResetEmail = async (
   await sendEmail(userEmail, "Password Reset Request", emailContent);
 };
 
-const sendActivationEmail = async (user: UserDocument): Promise<void> => {
-  const activationToken = crypto.randomBytes(32).toString("hex");
+const sendActivationOtp = async (user: UserDocument) => {
+  // cooldown
+  if (
+    user.otpLastSentAt &&
+    Date.now() - user.otpLastSentAt.getTime() < 60 * 1000
+  ) {
+    throw new Error("Please wait before requesting another OTP");
+  }
 
-  user.activationToken = activationToken;
-  user.activationTokenExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  const hashedOtp = await bcrypt.hash(otp, 10);
+
+  user.otpCode = hashedOtp;
+
+  user.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+  user.otpLastSentAt = new Date();
+
   await user.save();
 
-  // Fetch profile for name (non-blocking)
-  const profile = await Profile.findOne({ userId: user._id }).select(
-    "fullName",
-  );
+  const profile = await Profile.findOne({
+    userId: user._id,
+  }).select("fullName");
 
   const displayName = profile?.fullName?.split(" ")[0] ?? "there";
 
-  const activationLink = `${CLIENT_HOST}/auth/activate-account/${activationToken}`;
-
   const emailContent = `
     <p>Hello ${displayName},</p>
-    <p>Thanks for signing up! Please click below to activate your account:</p>
-    <p><a href="${activationLink}">Activate Account</a></p>
-    <p>If you didn't request this, you can safely ignore this email.</p>
+    <p>Your verification code is:</p>
+    <h2>${otp}</h2>
+    <p>This code expires in 10 minutes.</p>
   `;
 
-  await sendEmail(user.email, "Activate Your Account", emailContent);
+  await sendEmail(user.email, "Verify your account", emailContent);
 };
 
-export { sendEmail, sendPasswordResetEmail, sendGenEmail, sendActivationEmail };
+export { sendEmail, sendPasswordResetEmail, sendGenEmail, sendActivationOtp };
