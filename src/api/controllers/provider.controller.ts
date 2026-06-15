@@ -32,7 +32,7 @@ export const getNearbyProviders = async (req: Request, res: Response) => {
       },
       {
         $match: {
-          available: true,
+          // available: true, //Match removed for now --just for debugging | Later providers will be expected to toggle availability
           ...(service ? { services: service } : {}),
         },
       },
