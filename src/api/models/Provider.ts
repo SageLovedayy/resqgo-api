@@ -10,9 +10,15 @@ export interface IProvider {
   userId: Types.ObjectId;
 
   businessName: string;
+  phoneNumber: string;
 
   services: ServiceType[];
-  charges?: number;
+  charges: {
+    autoRepair?: number;
+    towing?: number;
+    fuelDelivery?: number;
+    insurance?: number;
+  };
 
   location: {
     type: "Point";
@@ -49,7 +55,8 @@ const ProviderSchema = new Schema<IProvider>(
       index: true,
     },
 
-    businessName: { type: String, required: true },
+    businessName: { type: String, required: true, trim: true },
+    phoneNumber: { type: String, required: true, trim: true },
 
     services: [
       {
@@ -58,7 +65,12 @@ const ProviderSchema = new Schema<IProvider>(
       },
     ],
 
-    charges: Number,
+    charges: {
+      autoRepair: Number,
+      towing: Number,
+      fuelDelivery: Number,
+      insurance: Number,
+    },
 
     available: { type: Boolean, default: false },
 
