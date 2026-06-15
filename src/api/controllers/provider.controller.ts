@@ -86,7 +86,7 @@ export const getNearbyProviders = async (req: Request, res: Response) => {
         avgRat: p.engagement?.avgRating ?? 0,
         locationName: p.locationName,
         services: p.services,
-        charges: String(p.charges ?? ""),
+        charges: p.charges ?? {},
       },
 
       distance: `${(p.distance / 1000).toFixed(1)} km`,
