@@ -101,3 +101,19 @@ export const getNearbyProviders = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getAllProviders = async (req: Request, res: Response) => {
+  try {
+    const result = await Provider.find({});
+
+    return res.json({
+      count: result.length,
+      data: result,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Failed to fetch all providers",
+    });
+  }
+};
